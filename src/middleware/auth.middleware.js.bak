@@ -1,0 +1,30 @@
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+
+function ensureAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Missing Authorization' });
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') return res.status(401).json({ error: 'Bad Authorization format' });
+  const token = parts[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload; // payload should include _id and role
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// roleOr: accepts roles or a single role; passes if req.user.role is in allowed roles
+function ensureRole(allowedRoles) {
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  return function (req, res, next) {
+    if (!req.user || !req.user.role) return res.status(403).json({ error: 'Forbidden' });
+    if (roles.includes(req.user.role)) return next();
+    return res.status(403).json({ error: 'Forbidden' });
+  };
+}
+
+module.exports = { ensureAuth, ensureRole };
