@@ -31,6 +31,9 @@ export default function AlumniDashboard({ useMock = false }) {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
+  // API base (allows frontend to target a deployed backend)
+  const API_BASE = import.meta.env.VITE_API_BASE || '';
+
   // Mock data to allow the component to render without a backend.
   const MOCK = {
     me: { _id: 'mock-alumni-1', name: 'Alice Alumni', role: 'alumni', email: 'alumni@example.com' },
@@ -61,7 +64,7 @@ export default function AlumniDashboard({ useMock = false }) {
     const id = studentId || window.prompt('Enter student id to match (or leave blank)');
     if (!id) return;
     try {
-      const res = await fetch('/api/match', {
+      const res = await fetch(`${API_BASE}/api/match`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ studentId: id, limit: 10 }),
@@ -90,11 +93,11 @@ export default function AlumniDashboard({ useMock = false }) {
           setConnections(MOCK.connections);
         } else {
           const [meRes, mentorshipRes, jobsRes, eventsRes, connsRes] = await Promise.all([
-            fetch('/api/auth/me', { headers: authHeaders() }),
-            fetch('/api/mentorship/incoming', { headers: authHeaders() }),
-            fetch('/api/jobs?postedBy=me', { headers: authHeaders() }),
-            fetch('/api/events?organizer=me', { headers: authHeaders() }),
-            fetch('/api/users/connections', { headers: authHeaders() }),
+            fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() }),
+            fetch(`${API_BASE}/api/mentorship/incoming`, { headers: authHeaders() }),
+            fetch(`${API_BASE}/api/jobs?postedBy=me`, { headers: authHeaders() }),
+            fetch(`${API_BASE}/api/events?organizer=me`, { headers: authHeaders() }),
+            fetch(`${API_BASE}/api/users/connections`, { headers: authHeaders() }),
           ]);
 
           // Basic status handling; each endpoint may return different payload formats
